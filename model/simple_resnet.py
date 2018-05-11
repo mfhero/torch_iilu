@@ -10,6 +10,9 @@ import torch
 import torch.nn as nn
 from torchvision.models.resnet import  ResNet, BasicBlock
 
+#best_model = "zoo/MSE/netG_epoch_55.pth"
+best_model = "zoo/GAN/netG_epoch_358.pth"
+
 class Generator(nn.Module):
     def __init__(self, ngpu, layers, inplanes = 3):
         super(Generator, self).__init__()
@@ -39,6 +42,7 @@ class Generator(nn.Module):
         #    elif isinstance(m, nn.BatchNorm2d):
         #        nn.init.constant_(m.weight, 1)
         #        nn.init.constant_(m.bias, 0)
+        self.load_state_dict(torch.load(best_model))
 
     def _make_layer(self, block, planes, blocks, stride=1):
         downsample = None

@@ -9,16 +9,26 @@
 import torch
 import torch.nn as nn
 
-from torchvision.models.resnet import  ResNet, BasicBlock
+from torchvision.models.resnet import BasicBlock, ResNet, model_zoo, model_urls
 
 class Discriminator(ResNet):
     def __init__(self, ngpu):
-        Resnet.__init__(self, BasicBlock, [2, 2, 2, 2], True)
+        ResNet.__init__(self, BasicBlock, [3, 4, 6, 3])
+        self.load_state_dict(model_zoo.load_url(model_urls['resnet34']))
         self.ngpu = ngpu
         self.output = nn.Sequential(
-                  nn.Linear(512 * 2, 1),
+                  nn.Linear(512, 1),
                   nn.Sigmoid()
                 )
+        #self.output = nn.Sequential(
+        #          nn.Conv2d(512, 32, 1, 1, 0, bias = True),
+        #          nn.LeakyReLU(0.2, inplace=True),
+        #          nn.MaxPool2d(7, 1),
+        #          nn.Conv2d(32, 1, 1, 1, 0, bias = True),
+        #          nn.Sigmoid()
+        #        )
+
+
 
     def main(self, x):
         x = self.conv1(x)
@@ -33,12 +43,14 @@ class Discriminator(ResNet):
 
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
+        return x
 
     def forward(self, x):
         x, y = torch.split(x, 3, dim = 1)
         x = self.main(x)
-        y = self.main(y)
-        z = torch.cat([x, y], dim = 1)
-        z = self.output(z)
+        #y = self.main(y)
+        #z = torch.cat([x, y], dim = 1)
+        #z = self.output(z)
+        z = self.output(x)
 
         return z

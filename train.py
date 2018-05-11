@@ -107,7 +107,7 @@ real_label = 1
 fake_label = 0
 
 # setup optimizer
-optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+optimizerD = optim.Adam(netD.parameters(), lr=opt.lr*2, betas=(opt.beta1, 0.999))
 optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
 for epoch in range(opt.niter):
@@ -139,7 +139,7 @@ for epoch in range(opt.niter):
         label.fill_(fake_label)
         output = netD(torch.cat([fake.detach(), real_cpu], dim = 1))
         errD_fake = criterion(output, label)
-        #errD_fake.backward()
+        errD_fake.backward()
         D_G_z1 = output.mean().item()
         errD = errD_real + errD_fake
         optimizerD.step()
@@ -154,15 +154,15 @@ for epoch in range(opt.niter):
 
         errG = criterion(output, label)
         #errG.backward()
-        mseG = mse(fake, real_cpu)
+        mseG = mse(fake, real_cpu) / batch_size 
         
         #if mseG > 50000:
         #    mseG.backward()
         #else:
         #    errG.backward()
-        #lossG = errG * 1000 + mseG
+        lossG = errG * 1000 + mseG 
         #lossG.backward()
-        mseG.backward()
+        #mseG.backward()
 
         optimizerG.step()
 
@@ -181,5 +181,6 @@ for epoch in range(opt.niter):
             normalize=True)
 
     # do checkpointing
-    torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % (opt.outf, epoch))
-    torch.save(netD.state_dict(), '%s/netD_epoch_%d.pth' % (opt.outf, epoch))
+    if epoch % 20 == 0:
+        torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % (opt.outf, epoch))
+        torch.save(netD.state_dict(), '%s/netD_epoch_%d.pth' % (opt.outf, epoch))
